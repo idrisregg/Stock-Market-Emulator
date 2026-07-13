@@ -6,7 +6,7 @@ import { price } from './data/queries.ts';
 const server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
 
-    res.end('Hello, World!\n');
+    res.end('/n');
 }).listen(6767);
 
 
