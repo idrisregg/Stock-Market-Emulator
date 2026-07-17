@@ -1,6 +1,8 @@
 import http from "http";
 import WebSocket, { WebSocketServer } from 'ws';
 import { price } from './data/queries.ts';
+import database from './data/model.ts';
+
 
 //creation of simple http server
 const server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
@@ -13,17 +15,28 @@ const server = http.createServer((req: http.IncomingMessage, res: http.ServerRes
 const wss = new WebSocketServer({ server });
 
 
-let user: number = 0;
+let userCount: number = 0;
 
-wss.on('connection', function connection(ws: WebSocket) {
+// just way to mimic different type of users
+enum Role {
+    user,
+    seller
+}
+let user: Role = Role.seller
+
+const onErr = (err: Error): void => {
+    console.log("There was an Issue Connecting to the Host", err)
+}
+
+wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebSocket) {
     const maxLoad = 10
 
 
-    ws.on('error', console.error);
+    ws.on('error', onErr);
 
     ws.on('message', function message(data: string) {
         if (data.length < maxLoad) {
-            console.log("User " + user + ":", data.toString());
+            console.log("User " + userCount + ":", data.toString());
         }
         if (data.length > maxLoad) {
             console.log("you exceeded message length please wait a moment to make another Offer.")
@@ -35,7 +48,7 @@ wss.on('connection', function connection(ws: WebSocket) {
 
         //if any bidder bids the same price as the seller, then the share is sold to that user and connection drops
         if (data == price) {
-            console.log("the Share has been Sold to user " + user + " for the price of " + price);
+            console.log("the Share has been Sold to user " + userCount + " for the price of " + price);
             console.log("thank you for your participation.")
             wss.close();
             process.exit(0)
@@ -44,9 +57,37 @@ wss.on('connection', function connection(ws: WebSocket) {
 
     //find out users who disconnect
     ws.on('close', function close() {
-        console.log("User " + user + " has disconnected");
-        user--
+        console.log("User " + userCount + " has disconnected");
+        userCount--
     });
 
-    user++
-})
+    userCount++
+}
+
+    : function connection(ws: WebSocket) {
+        ws.on('error', onErr);
+
+
+        ws.on("message", function message(data: string) {
+            try {
+                //making sure it only accept digits for pricee
+                if (!/^\d+$/.test(data)) {
+                    console.log("please use only Numbers. and Don't leave Space")
+                }
+
+                else {
+                    database.prepare(
+                        "UPDATE Trade SET price = ? WHERE id = ?"
+                    ).run(data.toString().trim(), 1);
+                    console.log("Seller new Price : " + data)
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        })
+
+        ws.on('close', function close() {
+            console.log("Seller has Disconnected.")
+        })
+    }
+)
