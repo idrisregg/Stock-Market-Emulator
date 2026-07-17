@@ -8,12 +8,13 @@ import database from './data/model.ts';
 const server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
 
-    res.end('/n');
+    res.end('Welcome');
 }).listen(6767);
 
 
 const wss = new WebSocketServer({ server });
 
+let cached = ""
 
 let userCount: number = 0;
 
@@ -29,6 +30,7 @@ const onErr = (err: Error): void => {
 }
 
 wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebSocket) {
+
     const maxLoad = 10
 
 
@@ -47,11 +49,23 @@ wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebS
         }
 
         //if any bidder bids the same price as the seller, then the share is sold to that user and connection drops
-        if (data == price) {
-            console.log("the Share has been Sold to user " + userCount + " for the price of " + price);
-            console.log("thank you for your participation.")
-            wss.close();
-            process.exit(0)
+
+        //checks cache before db
+        if (cached) {
+            if (cached == data) {
+                console.log("the Share has been Sold to user " + userCount + " for the price of " + cached);
+                console.log("thank you for your participation.")
+                wss.close();
+                process.exit(0)
+            }
+        }
+        else {
+            if (price == data) {
+                console.log("the Share has been Sold to user " + userCount + " for the price of " + price);
+                console.log("thank you for your participation.")
+                wss.close();
+                process.exit(0)
+            }
         }
     });
 
@@ -80,6 +94,8 @@ wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebS
                         "UPDATE Trade SET price = ? WHERE id = ?"
                     ).run(data.toString().trim(), 1);
                     console.log("Seller new Price : " + data)
+                    //add the new price to cache
+                    cached = data
                 }
             } catch (e) {
                 console.log(e)
