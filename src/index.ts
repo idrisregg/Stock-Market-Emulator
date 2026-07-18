@@ -60,8 +60,8 @@ wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebS
             }
         }
         else {
-            if (price == data) {
-                console.log("the Share has been Sold to user " + userCount + " for the price of " + price);
+            if (getPricefromDB() == data) {
+                console.log("the Share has been Sold to user " + userCount + " for the price of " + getPricefromDB());
                 console.log("thank you for your participation.")
                 wss.close();
                 process.exit(0)
