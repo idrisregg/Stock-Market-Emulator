@@ -16,7 +16,9 @@ if (!exists) {
 
 
 
-const price = database.prepare("SELECT price FROM Trade WHERE id = ?").get(1)?.price;
+const getPricefromDB=()=>{
+    return  database.prepare("SELECT price FROM Trade WHERE id = ?").get(1)?.price;
+}
 
 
 export { price };
