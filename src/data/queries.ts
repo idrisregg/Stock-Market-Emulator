@@ -16,9 +16,7 @@ if (!exists) {
 
 
 
-const getPricefromDB=()=>{
+export default function getPricefromDB(){
     return  database.prepare("SELECT price FROM Trade WHERE id = ?").get(1)?.price;
 }
 
-
-export { price };
