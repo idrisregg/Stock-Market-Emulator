@@ -1,6 +1,6 @@
 import http from "http";
 import WebSocket, { WebSocketServer } from 'ws';
-import { price } from './data/queries.ts';
+import getPricefromDB from './data/queries.ts';
 import database from './data/model.ts';
 
 
