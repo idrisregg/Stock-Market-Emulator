@@ -2,6 +2,7 @@ import http from "http";
 import WebSocket, { WebSocketServer } from 'ws';
 import getPricefromDB from './data/queries.ts';
 import database from './data/model.ts';
+import { error } from "console";
 
 
 //creation of simple http server
@@ -23,25 +24,22 @@ enum Role {
     user,
     seller
 }
-let user: Role = Role.seller
+let user: Role = Role.user
 
-const onErr = (err: Error): void => {
-    console.log("There was an Issue Connecting to the Host", err)
-}
 
 wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebSocket) {
 
     const maxLoad = 10
 
 
-    ws.on('error', onErr);
+    ws.on('error', error);
 
     ws.on('message', function message(data: string) {
         if (data.length < maxLoad) {
             console.log("User " + userCount + ":", data.toString());
         }
         if (data.length > maxLoad) {
-            console.log("you exceeded message length please wait a moment to make another Offer.")
+            ws.send("you exceeded message length please wait a moment to make another Offer.")
             ws.pause()
             setTimeout(() => {
                 ws.resume()
@@ -60,11 +58,16 @@ wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebS
             }
         }
         else {
-            if (getPricefromDB() == data) {
-                console.log("the Share has been Sold to user " + userCount + " for the price of " + getPricefromDB());
-                console.log("thank you for your participation.")
-                wss.close();
-                process.exit(0)
+            if (getPricefromDB() === null) {
+                ws.send("Please Wait until a Seller Submit an Offer")
+            }
+            else {
+                if (getPricefromDB() == data) {
+                    console.log("the Share has been Sold to user " + userCount + " for the price of " + getPricefromDB());
+                    console.log("thank you for your participation.")
+                    wss.close();
+                    process.exit(0)
+                }
             }
         }
     });
@@ -79,14 +82,14 @@ wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebS
 }
 
     : function connection(ws: WebSocket) {
-        ws.on('error', onErr);
+        ws.on('error', error);
 
 
         ws.on("message", function message(data: string) {
             try {
                 //making sure it only accept digits for pricee
                 if (!/^\d+$/.test(data)) {
-                    console.log("please use only Numbers. and Don't leave Space")
+                    ws.send("please use only Numbers. and Don't leave Space")
                 }
 
                 else {
