@@ -3,7 +3,7 @@ import WebSocket, { WebSocketServer } from 'ws';
 import getPricefromDB from './data/queries.ts';
 import database from './data/model.ts';
 import { error } from "console";
-
+import findRole from "./util/findRole.ts";
 
 //creation of simple http server
 const server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
@@ -19,15 +19,9 @@ let cached = ""
 
 let userCount: number = 0;
 
-// just way to mimic different type of users
-enum Role {
-    user,
-    seller
-}
-let user: Role = Role.user
+const final = await findRole()
 
-
-wss.on('connection', (user as Role) === Role.user ? function connection(ws: WebSocket) {
+wss.on('connection', final === "buyer" ? function connection(ws: WebSocket) {
 
     const maxLoad = 10
 

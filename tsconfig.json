@@ -44,6 +44,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/data", "src/util"],
   "exclude": ["node_modules", "dist"]
 }
